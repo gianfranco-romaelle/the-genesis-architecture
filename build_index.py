@@ -198,6 +198,7 @@ MIN_CHUNK_CHARS = 80       # discard chunks shorter than this
 SCANNED_CHAR_DENSITY = 0.3  # chars-per-byte below this → treat as scanned
 DOCLING_TIMEOUT_S    = 300  # 5-minute cap on Docling OCR per file; avoids infinite hangs on large scanned PDFs
 FILE_READ_TIMEOUT_S  = 180  # 3-minute cap on reading a file from disk/network; avoids G: drive stalls
+FILE_HASH_TIMEOUT_S  = 10   # fast cap for the hash-check in collect_files; on timeout treat file as changed
 
 _DOCLING_ENABLED = True     # set to False via --no-docling to skip Docling fallback entirely
 
@@ -263,6 +264,22 @@ def file_hash(path: Path) -> str:
         for block in iter(lambda: f.read(65536), b""):
             h.update(block)
     return h.hexdigest()
+
+
+def file_hash_safe(path: Path) -> Optional[str]:
+    """file_hash with FILE_HASH_TIMEOUT_S timeout. Returns None on timeout/error.
+    None is treated as 'hash unknown → include file for re-indexing' in collect_files.
+    Uses shutdown(wait=False) so a slow G: drive hash doesn't block the caller."""
+    from concurrent.futures import ThreadPoolExecutor
+    ex = ThreadPoolExecutor(max_workers=1)
+    try:
+        fut = ex.submit(file_hash, path)
+        return fut.result(timeout=FILE_HASH_TIMEOUT_S)
+    except Exception:
+        return None
+    finally:
+        ex.shutdown(wait=False, cancel_futures=False)  # abandon thread; don't block
+
 
 def read_file_bytes(path: Path) -> bytes:
     """Read file once into memory for hash + PDF parse in a single network round-trip."""
@@ -1040,11 +1057,12 @@ def process_file(
         # Read once for both hash and parse (avoids double network I/O)
         # Timeout guards against G: drive stalls on uncached files
         import concurrent.futures as _cf
+        _exe = _cf.ThreadPoolExecutor(max_workers=1)
         try:
-            with _cf.ThreadPoolExecutor(max_workers=1) as _exe:
-                _fut = _exe.submit(read_file_bytes, path)
-                raw = _fut.result(timeout=FILE_READ_TIMEOUT_S)
+            _fut = _exe.submit(read_file_bytes, path)
+            raw = _fut.result(timeout=FILE_READ_TIMEOUT_S)
         except _cf.TimeoutError:
+            _exe.shutdown(wait=False, cancel_futures=False)
             console.print(f"  [yellow]Read timeout ({FILE_READ_TIMEOUT_S}s) on {path.name} — skipping[/yellow]")
             return {
                 "path": rel, "hash": "", "status": "failed",
@@ -1052,11 +1070,13 @@ def process_file(
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }
         except OSError as exc:
+            _exe.shutdown(wait=False, cancel_futures=False)
             return {
                 "path": rel, "hash": "", "status": "failed",
                 "chunks_indexed": 0, "error": f"read error: {exc}",
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }
+        _exe.shutdown(wait=False, cancel_futures=False)
         h = hash_bytes(raw)
         pages_fn = lambda: parse_pdf_from_bytes(raw, path)  # noqa: E731
     elif ext == ".djvu":
@@ -1179,7 +1199,10 @@ def collect_files(
     files = []
     skipped_large = 0
     max_bytes = int(max_file_mb * 1024 * 1024) if max_file_mb else None
+    done = False
     for ext in SUPPORTED_EXTENSIONS:
+        if done:
+            break
         for p in library_root.rglob(f"*{ext}"):
             if is_excluded(p):
                 continue
@@ -1194,16 +1217,19 @@ def collect_files(
                 entry = state["files"].get(str(p.relative_to(library_root)))
                 if entry and entry.get("status") == "indexed":
                     stored_hash = entry.get("hash", "")
-                    try:
-                        if stored_hash and file_hash(p) == stored_hash:
-                            # Re-index if contextual retrieval is enabled and
-                            # this file was indexed without (or with older) context.
-                            if (not _CONTEXT_ENABLED or
-                                    entry.get("context_version", 0) >= CURRENT_CONTEXT_VERSION):
-                                continue
-                    except OSError:
-                        continue
+                    # file_hash_safe: returns None on timeout (treat as changed → re-index)
+                    actual_hash = file_hash_safe(p)
+                    if actual_hash is not None and stored_hash and actual_hash == stored_hash:
+                        # Re-index if contextual retrieval is enabled and
+                        # this file was indexed without (or with older) context.
+                        if (not _CONTEXT_ENABLED or
+                                entry.get("context_version", 0) >= CURRENT_CONTEXT_VERSION):
+                            continue
             files.append(p)
+            # short-circuit: if limit given collect a generous buffer then stop scanning
+            if limit and len(files) >= limit * 4:
+                done = True
+                break
     files.sort()
     if skipped_large:
         console.print(f"[dim]Skipped {skipped_large} files exceeding {max_file_mb} MB size limit.[/dim]")
