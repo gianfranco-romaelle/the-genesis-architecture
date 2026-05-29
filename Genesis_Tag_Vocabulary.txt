@@ -1,0 +1,741 @@
+COGNITIVE TAGS — CLOSED VOCABULARY
+
+Intentionality
+Noesis
+Noema
+Epoché
+Reduction
+Constitution
+Horizon
+Lifeworld
+Evidence
+Fulfillment
+Intuition
+Presentation
+Appresentation
+Retention
+Protention
+Temporal Synthesis
+Passive Synthesis
+Active Synthesis
+
+Immediacy
+Mediation
+Negation
+Determinate Negation
+Sublation
+Becoming
+Self-Relation
+Otherness
+Contradiction
+Totality
+Reflection
+Essence
+Appearance
+Ground
+Actuality
+Concept
+
+Polarity
+Potency
+Ungrund
+Dynamic Identity
+Nature-as-Subject
+Productivity
+Force
+Organicism
+Self-Organization
+Dynamic Equilibrium
+Genesis
+
+Representation
+Inference
+Formalization
+Abstraction
+Symbolization
+Structure
+Model
+System
+Mapping
+Equivalence
+Transformation
+Relation
+Category
+Functoriality
+Invariance
+
+Substance
+Process
+Event
+Field
+Object
+Continuum
+Discrete
+Potentiality
+Virtuality
+Identity
+Difference
+Multiplicity
+Unity
+
+Emergence
+Evolution
+Revolution
+Phase Transition
+Stabilization
+Drift
+Layering
+Stratification
+Recursion
+Iteration
+Irreversibility
+
+Measurement
+Experimentation
+Simulation
+Optimization
+Computation
+Encoding
+Decoding
+Transmission
+Feedback
+Control
+Adaptation
+Learning
+Inference Engine
+
+MATH TAGS — CLOSED VOCABULARY
+
+Point
+Set
+Class
+Element
+Object
+Collection
+Space
+Manifold
+Scheme
+Stack
+Topos
+Category
+n-Category
+Infinity-Category
+Sheaf
+Presheaf
+Bundle
+Field
+Lattice
+Graph
+Network
+
+Relation
+Mapping
+Function
+Morphism
+Homomorphism
+Isomorphism
+Embedding
+Projection
+Fibration
+Covering
+Adjunction
+Equivalence
+Duality
+Correspondence
+Symmetry
+Action
+Constraint
+
+Transformation
+Operator
+Flow
+Deformation
+Homotopy
+Isotopy
+Evolution
+Iteration
+Recursion
+Composition
+Functorial Mapping
+Natural Transformation
+Pushforward
+Pullback
+Transport
+
+Group
+Ring
+Module
+Algebra
+Lie Algebra
+Representation
+Monoid
+Semigroup
+Tensor Structure
+Graded Structure
+Operad
+
+Topology
+Metric
+Distance
+Continuity
+Boundary
+Neighborhood
+Open Set
+Closed Set
+Compactness
+Connectedness
+Curvature
+Dimension
+Fiber Structure
+Stratification
+Singularity
+
+Logic
+Type
+Proposition
+Proof
+Inference
+Model
+Semantics
+Syntax
+Internal Logic
+Higher Logic
+Categorical Logic
+Topos Logic
+Sheaf Semantics
+Diagram
+Limit
+Colimit
+Universal Property
+
+Information
+Entropy
+Encoding
+Decoding
+Compression
+Algorithm
+Computation
+Complexity
+Automaton
+State Space
+Transition System
+Signal
+Data Structure
+
+Continuum
+Differentiation
+Integration
+Measure
+Probability
+Distribution
+Variation
+Functional
+Operator Algebra
+Spectral Structure
+
+Discrete Structure
+Counting
+Enumeration
+Graph Theory
+Combinatorics
+Finite Structure
+Lattice Path
+Partition
+Configuration
+
+Functoriality
+Invariance
+Covariance
+Contravariance
+Stability
+Universality
+Moduli
+Parameter Space
+Derived Structure
+Higher Structure
+Cohomology
+Homology
+Sheaf Cohomology
+Obstruction
+Localization
+Gluing
+Descent
+Stackification
+
+SCIENTIFIC DOMAIN TAGS — CLOSED VOCABULARY
+
+Classical Mechanics
+Electrodynamics
+Thermodynamics
+Statistical Mechanics
+Quantum Mechanics
+Quantum Field Theory
+Relativity
+Cosmology
+Particle Physics
+Condensed Matter Physics
+
+Alchemy
+Early Modern Chemistry
+Classical Chemistry
+Physical Chemistry
+Organic Chemistry
+Inorganic Chemistry
+Materials Science
+Surface Science
+Catalysis
+Spectroscopy
+
+Biology
+Cell Biology
+Molecular Biology
+Genetics
+Evolutionary Biology
+Developmental Biology
+Neuroscience
+Systems Biology
+Bioinformatics
+Ecology
+Physiology
+
+Medicine
+Clinical Medicine
+Pharmacology
+Toxicology
+Pathophysiology
+Epidemiology
+Public Health
+Translational Medicine
+Drug Development
+Biostatistics
+
+Psychology
+Cognitive Science
+Phenomenology
+Consciousness Studies
+Perception Science
+Neurophenomenology
+Embodied Cognition
+Behavioral Science
+Decision Theory
+
+Systems Theory
+Cybernetics
+Complex Systems
+Nonlinear Dynamics
+Network Science
+Control Theory
+Information Theory
+Dynamical Systems
+Self-Organization
+Emergence
+
+Computer Science
+Artificial Intelligence
+Machine Learning
+Data Science
+Algorithms
+Distributed Systems
+Computation Theory
+Information Processing
+Simulation Science
+Software Systems
+
+Pure Mathematics
+Applied Mathematics
+Mathematical Physics
+Logic
+Category Theory
+Topology
+Algebraic Geometry
+Probability Theory
+
+Mechanical Engineering
+Electrical Engineering
+Chemical Engineering
+Biomedical Engineering
+Control Engineering
+Robotics
+Signal Processing
+Systems Engineering
+
+Scientific Methodology
+Measurement Theory
+Experimentation
+Model Building
+Theory Construction
+Formalization
+Reductionism
+Holism
+Interdisciplinary Synthesis
+
+PIPELINE FLAGS — CLOSED VOCABULARY
+
+Source-Identified
+Source-Queued
+Source-Downloaded
+Source-Verified
+Source-Metadata-Incomplete
+
+OCR-Needed
+OCR-Queued
+OCR-In-Progress
+OCR-Complete
+OCR-Failed
+OCR-Quality-Low
+OCR-Manual-Review
+Text-Extracted
+Text-Not-Extractable
+
+Text-Cleaning-Needed
+Text-Cleaned
+Structure-Parsed
+Structure-Incomplete
+Formatting-Issues
+Encoding-Issues
+Section-Boundaries-Detected
+
+Translation-Needed
+Translation-Queued
+Translation-In-Progress
+Translation-Complete
+Translation-Verified
+Language-Complex
+Multi-Language
+
+Tagging-Needed
+Tagging-In-Progress
+Tagging-Complete
+Auto-Tagged
+Manual-Tagged
+Tag-Review-Needed
+Ontology-Aligned
+Low-Confidence-Tags
+
+Math-Detected
+Math-Extraction-Needed
+Math-Parsed
+Math-Complex
+Diagram-Detected
+Diagram-Extraction-Needed
+Diagram-Parsed
+
+Graph-Ready
+Graph-Queued
+Graph-Integrated
+Graph-Partial
+Node-Created
+Edges-Linked
+Relationship-Incomplete
+
+Timeline-Ready
+Timeline-Queued
+Timeline-Integrated
+Timeline-Partial
+Era-Assigned
+Era-Uncertain
+
+Thesis-Relevant
+High-Priority
+Core-Text
+Reference-Text
+Peripheral
+Needs-Review
+Flagged-Important
+
+Quality-Verified
+Quality-Low
+Needs-Validation
+Inconsistent-Data
+Duplicate-Suspected
+Corrupted-File
+
+Automation-Pending
+Automation-In-Progress
+Automation-Complete
+Manual-Override
+Pipeline-Blocked
+Dependency-Missing
+Ready-For-Next-Step
+
+SCHOOLS — CLOSED VOCABULARY
+
+Vedic Strata
+Samhita Tradition
+Brahmana Tradition
+Aranyaka Tradition
+Upanishadic Tradition
+Upanishadic Astronomy
+Temple Grammar
+Vedanga Tradition
+Jyotisha Tradition
+Sulba Sutra Geometry
+Mimamsa
+Vedanta
+Advaita Vedanta
+Nyaya
+Vaisheshika
+Samkhya
+Yoga Tradition
+Tantric Traditions
+
+Pre-Socratic Natural Philosophy
+Pythagorean Tradition
+Eleatic School
+Atomist Tradition
+Sophist Tradition
+Platonic Academy
+Middle Platonism
+Neoplatonism
+Aristotelian Tradition
+Peripatetic School
+Stoicism
+Epicureanism
+Alexandrian Mathematics
+Euclidean Synthesis
+Neo-Pythagoreanism
+Hermeticism
+Gnosticism
+
+Patristic Tradition
+Pauline Dispensation
+Augustinian Tradition
+Scholasticism
+Thomism
+Scotism
+Nominalism
+Catholic Monastery Schools
+Cathedral Schools
+Jesuit Tradition
+Scholastic Logic
+Aristotelian Textbook Tradition
+Grimoire Tradition
+Kabbalistic Traditions
+Christian Mysticism
+Islamic Golden Age Science
+House of Wisdom
+Avicennism
+Averroism
+Asharism
+Persian Mathematical Tradition
+
+Chinese Counting-Rod Tradition
+Suanpan Tradition
+Confucian Tradition
+Neo-Confucianism
+Daoist Natural Philosophy
+Mohism
+Legalism
+Warring States Philosophy
+Japanese Rangaku
+Korean Neo-Confucianism
+
+Renaissance Humanism
+Renaissance Perspective
+Florentine Renaissance
+Venetian Scientific Tradition
+Hermetic Renaissance
+Rosicrucians
+Freemasons
+Illuminati
+Alchemy
+Paracelsianism
+Protestant Reformation
+Counter-Reformation
+Cambridge Platonists
+
+Scientific Revolution
+Newtonian Tradition
+Leibnizian Tradition
+Cartesian Rationalism
+Continental Rationalism
+British Empiricism
+Baconian Method
+London Royal Society
+Paris Académie des Sciences
+Berlin Academy Tradition
+Société d’Arcueil
+Laplacean Mechanics
+Euler–Lagrange–Laplace Analysis
+Taylor–Gregory Calculus
+Newton–Leibniz Calculus
+Enlightenment
+Scottish Enlightenment
+Physiocracy
+Positivism
+
+Kerala Calculus
+Lavoisier–Comte Chemical System
+Naturphilosophie
+Jena Romanticism
+Romantic Naturphilosophie
+German Idealism
+Kantianism
+Fichtean Tradition
+Schellingian Tradition
+Hegelianism
+Young Hegelians
+Absolute Idealism
+American Transcendentalism
+Goethean Science
+Humboldtian Science
+Energy Concept Tradition
+Thermodynamic Tradition
+Field Theory Tradition
+Electromagnetic Field Theory
+Modern Esoteric Recovery
+
+Göttingen School
+Gauss–Riemann–Dirichlet Lineage
+Weierstrassian Analysis
+Erlangen Program
+Italian School of Algebraic Geometry
+French Analytical Tradition
+British Analytical Tradition
+Hilbert School
+Noether School
+Invariant Theory Tradition
+Projective Geometry Tradition
+Lie Theory Tradition
+Symbolic Logic Tradition
+Frege–Russell Prelude
+Anglo Analytical Philosophy
+Phenomenology
+Brentano School
+Husserlian Phenomenology
+Munich Phenomenology
+Graz School
+Existential Phenomenology
+Hermeneutics
+Neo-Kantianism
+Marburg School
+Baden School
+
+Quantum Foundations
+Copenhagen School
+Wave Mechanics
+Matrix Mechanics
+Relativity Tradition
+General Relativity Community
+Hamilton–Jacobi Lineage
+Functional Analysis Tradition
+Lwów School of Mathematics
+Moscow School
+Luzin School
+Polish Logic School
+Vienna Circle
+Logical Positivism
+Formalism
+Intuitionism
+Constructivism
+Bourbaki
+Structuralism
+Category-Theoretic Semantics
+Grothendieck School
+EGA/SGA Lineage
+Paris Seminar Tradition
+Topos Theory Tradition
+Homological Algebra Tradition
+Sheaf-Theoretic Tradition
+Representation Theory Tradition
+Algebraic Topology Tradition
+Homotopy Theory Tradition
+Cybernetics
+Information Theory
+Systems Theory
+Operations Research
+RAND
+Game Theory Tradition
+Decision Theory Tradition
+
+Princeton IAS
+Chicago School
+Cambridge School
+Berlin School
+Ivy League
+Weimar Physics
+Departmental Hierarchies in Quantum Mechanics
+World War I Scientific Migration
+Cold War Science
+Big Science
+Military-Industrial Research
+Los Alamos Tradition
+Manhattan Project
+Bell Labs
+MIT Radiation Laboratory
+CERN
+Yang–Mills Tradition
+Kaluza–Klein Tradition
+The Martians
+Macy Conferences
+Chapel Hill Relativity Conference
+Shelter Island Conference
+Santa Fe Institute
+Complexity Science
+Nonlinear Dynamics Community
+
+Frankfurt School
+Critical Theory
+French Structuralism
+Poststructuralism
+Russian Formalism
+Semiotics
+Tartu–Moscow Semiotic School
+Psychoanalytic Tradition
+Lacanian Psychoanalysis
+Media Theory
+Systems Media Theory
+
+Computer Science Tradition
+Artificial Intelligence Research
+Symbolic AI
+Connectionism
+Machine Learning
+Deep Learning
+Cybernetic AI
+Distributed Systems Tradition
+Internet Research Tradition
+Platform Technoscience
+Open Source Movement
+Unix Tradition
+BASIC Language Tradition
+FORTRAN Language Tradition
+C Language Tradition
+Lisp Tradition
+Functional Programming Tradition
+
+DARPA
+DARPA VR
+Stanford Research Institute
+Remote Viewing Research
+AI Nexus Research
+CIA Research Networks
+KGB Research Networks
+Mossad Research Networks
+Rockefeller Institute
+Ahnenerbe Institute
+Anglo-Soviet Computational Quantum Biochemistry
+Soviet Research Schools
+Tel Aviv Research Poles
+
+Big Pharma
+Psychopharmacology Revolution
+NMR Research
+Birth Control Technoscience
+Western Diet Technoscience
+Biotechnology Industry
+Genomics Research
+Bioinformatics Community
+Neuroscience Community
+Cognitive Science Community
+Neurophenomenology
+
+PayPal Platform Lineage
+Twitter Platform Lineage
+XKeyscore Surveillance Lineage
+Palantir Platform Lineage
+Surveillance Capitalism
+Platform Governance
+Data Infrastructuralism
+Algorithmic Governance
+Computational Social Science

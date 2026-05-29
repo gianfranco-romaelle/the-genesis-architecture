@@ -1,0 +1,21 @@
+{
+  "_comment": "Hot-reloaded every 2 s by throttle.py — edit and save to see changes immediately.",
+
+  "library_root": "G:\\Other computers\\My Laptop\\THE AUGUSTE LAURENT SOCIETY",
+
+  "indexers": [
+    "build_index.py",
+    "index_timeline.py",
+    "graph_builder.py",
+    "enrich.py"
+  ],
+
+  "servers": [
+    "query.py"
+  ],
+
+  "vite_apps": [
+    { "name": "constellation", "cwd": "constellation", "port": 5173, "script": "dev" },
+    { "name": "scriptorium",   "cwd": "scriptorium",   "port": 5174, "script": "dev" }
+  ]
+}

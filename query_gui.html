@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auguste Laurent Society — Library Query</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & base ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; min-height: 100vh; }
+
+/* ── Top navigation bar ──────────────────────────────────────────────────── */
+.top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 42px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 18px;
+  background: rgba(247,242,233,0.97);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(136,111,76,0.18);
+}
+
+.nav-brand {
+  font-family: "DM Mono", "Space Mono", monospace;
+  font-size: 0.60rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #8b6840;
+  margin-right: 22px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nav-tabs { display: flex; gap: 3px; }
+
+.nav-tab {
+  height: 28px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: #685744;
+  cursor: pointer;
+  font-family: "DM Mono", "Space Mono", monospace;
+  font-size: 0.63rem;
+  letter-spacing: 0.03em;
+  transition: background 120ms, border-color 120ms, color 120ms;
+  white-space: nowrap;
+}
+.nav-tab:hover { background: rgba(139,104,64,0.08); color: #2c1a0e; }
+.nav-tab.active {
+  border-color: rgba(92,72,42,0.24);
+  background: rgba(139,104,64,0.13);
+  color: #1d140d;
+  font-weight: 500;
+}
+
+/* ── Iframe views ────────────────────────────────────────────────────────── */
+.view-frame {
+  display: none;
+  position: fixed;
+  top: 42px; left: 0; right: 0; bottom: 0;
+  width: 100%;
+  height: calc(100vh - 42px);
+  border: none;
+  background: #f7f2e9;
+}
+.view-frame.active { display: block; }
+
+body {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(196,174,129,0.28), transparent 28%),
+    radial-gradient(circle at 82% 0%, rgba(98,95,82,0.12),  transparent 22%),
+    linear-gradient(180deg, #f7f2e9 0%, #efe5d4 54%, #eadfcd 100%);
+  background-attachment: fixed;
+  color: #1d140d;
+  font-family: Georgia, "Times New Roman", serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Dot-grid overlay — identical to Constellation */
+body::before {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  content: "";
+  background-image:
+    radial-gradient(circle, rgba(83,63,34,0.14)  0 1px,   transparent 1.4px),
+    radial-gradient(circle, rgba(126,100,58,0.10) 0 1px,  transparent 1.5px);
+  background-position: 0 0, 22px 34px;
+  background-size: 118px 118px, 184px 184px;
+  opacity: 0.28;
+  z-index: 0;
+}
+
+button, input, textarea, select { font: inherit; }
+a { color: inherit; }
+
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+.layout {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  min-height: 100vh;
+  padding-top: 42px;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────────────────── */
+.sidebar {
+  position: sticky; top: 42px;
+  height: calc(100vh - 42px);
+  overflow-y: auto; overflow-x: hidden;
+  padding: 22px 18px 32px;
+  border-right: 1px solid rgba(136,111,76,0.18);
+  background:
+    linear-gradient(180deg, rgba(255,251,245,0.90), rgba(250,245,236,0.84)),
+    radial-gradient(circle at top left, rgba(160,136,97,0.08), transparent 30%);
+  backdrop-filter: blur(10px);
+}
+
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(136,111,76,0.18); border-radius: 2px; }
+
+/* ── Sidebar typography ──────────────────────────────────────────────────── */
+.eyebrow {
+  margin: 0 0 6px;
+  color: #8b6840;
+  font-family: "DM Mono", "Space Mono", monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sidebar-title {
+  margin: 0;
+  font-family: "IM Fell English", "Playfair Display", Georgia, serif;
+  font-size: clamp(1.5rem, 2.5vw, 1.9rem);
+  line-height: 1.05;
+  color: #1d140d;
+}
+
+.section-label {
+  margin: 0 0 8px;
+  color: #685744;
+  font-family: "DM Mono", "Space Mono", monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sep { height: 1px; background: rgba(136,111,76,0.14); margin: 16px 0; }
+
+/* ── LLM tab strip ─────────────────────────────────────────────────────────── */
+.llm-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+
+.llm-tab {
+  min-height: 32px;
+  padding: 0 4px;
+  border: 1px solid rgba(136,111,76,0.18);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.50);
+  color: #584937;
+  cursor: pointer;
+  font-family: "DM Mono", "Space Mono", monospace;
+  font-size: 0.62rem;
+  transition: background 120ms, border-color 120ms;
+}
+.llm-tab:hover { background: rgba(139,104,64,0.10); }
+.llm-tab.active {
+  border-color: rgba(92,72,42,0.34);
+  background: #eee3d2;
+  color: #1d140d;
+  font-weight: 500;
+}
+
+/* ── Ensemble model list ─────────────────────────────────────────────────── */
+#ensemble-info { display: grid; gap: 4px; margin-top: 9px; }
+
+.model-badge {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 9px;
+  border: 1px solid rgba(136,111,76,0.13);
+  border-radius: 6px;
+  background: rgba(255,252,247,0.48);
+  color: #584937;
+  font-family: "DM Mono", "Space Mono", monospace;
+  font-size: 0.60rem;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.model-dot {
+  flex-shrink: 0;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 5px var(--c);
+}
+.synth-label {
+  margin-left: auto;
+  color: #a08060;
+  font-size: 0.55rem;
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+/* ── Toggle ──────────────────────────────────────────────────────────────── */
+.toggle-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.toggle-label { color: #584937; font-size: 0.75rem; }
+.toggle {
+  position: relative; display: inline-block;
+  width: 36px; height: 20px; cursor: pointer; flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0; border-radius: 999px;
+  background: rgba(136,111,76,0.22); transition: 180ms;
+}
+.toggle-track::before {
+  content: ""; position: absolute;
+  width: 14px; height: 14px; left: 3px; top: 3px;
+  border-radius: 50%; background: #a08060; transition: 180ms;
+}
+.toggle input:checked + .toggle-track { background: rgba(126,200,200,0.46); }
+.toggle input:checked + .toggle-track::before { transform: translateX(16px); background: #7ec8c8; }
+
+/* ── Index status ────────────────────────────────────────────────────────── */
+.status-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid rgba(136,111,76,0.13);
+  border-radius: 6px;
+  background: rgba(255,252,247,0.48);
+  color: #584937;
+  font-family: "DM Mono", "Space Mono", monospace;
+  font-size: 0.64rem;
+  margin-bottom: 4px;
+}
+.sd {
+  flex-shrink: 0; width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(136,111,76,0.3);
+}
+.sd.on  { background: #467e50; box-shadow: 0 0 6px rgba(70,126,80,0.55); }
+.sd.off { background: rgba(136,111,76,0.30); }
+
+/* ── Query history ───────────────────────────────────────────────────────── */
+#history-list { display: grid; gap: 5px; }
+.hist-empty { color: #8b6840; font-size: 0.72rem; font-style: italic; }
+.hist-item {
+  display: block; width: 100%;
+  padding: 7px 10px;
+  border: 1px solid rgba(136,111,76,0.12);
+  border-radius: 6px;
+  background: rgba(255,252,247,0.50);
+  color: #584937;
+  cursor: pointer; text-align: left;
+  font-family: Georgia, serif; font-size: 0.71rem; font-style: italic;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  transition: background 120ms;
+}
+.hist-item:hover { background: rgba(139,104,64,0.12); color: #1d140d; }
+
+/* ── Main area ────────────────────────────────────────────────────────────── */
+.main { padding: 30px 38px 72px; overflow-y: auto; }
+
+/* ── Panel (shared glassmorphic card) ────────────────────────────────────── */
+.panel {
+  border: 1px solid rgba(136,111,76,0.18);
+  border-radius: 8px;
+  background: rgba(255,252,247,0.88);
+  box-shadow: 0 20px 58px rgba(56,42,24,0.09);
+  backdrop-filter: blur(10px);
+}
+
+/* ── Query panel ─────────────────────────────────────────────────────────── */
+.query-panel { padding: 22px 24px 20px; }
+
+.query-heading {
+  margin: 0 0 4px;
+  font-family: "IM Fell English", "Playfair Display", Georgia, serif;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  line-height: 1.08;
+}
+.query-sub {
+  margin: 0 0 16px;
+  color: #685744; font-size: 0.82rem; font-style: italic;
+}
+
+.query-input {
+  width: 100%; min-height: 82px;
+  padding: 14px 16px;
+  border: 1px solid rgba(136,111,76,0.20);
+  border-radius: 8px;
+  background: rgba(255,252,247,0.92);
+  color: #1d140d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.0rem; line-height: 1.55;
+  resize: vertical; outline: none;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.query-input:focus {
+  border-color: rgba(126,200,200,0.48);
+  box-shadow: 0 0 0 3px rgba(126,200,200,0.10);
+}
+.query-input::placeholder { color: #b09070; font-style: italic; }
+
+.query-controls {
+  display: flex; align-items: center;
+  justify-content: flex-end; gap: 10px;
+  margin-top: 11px;
+}
+.llm-chip {
+  color: #8b6840;
+  font-family: "DM Mono", "Space Mono", monospace;
+  font-size: 0.66rem;
+}
+.submit-btn {
+  min-height: 36px; padding: 0 20px;
+  border: 1px solid rgba(126,200,200,0.36);
+  border-radius: 6px;
+  background: rgba(139,104,64,0.08);
+  color: #1d140d;
+  cursor: pointer; font-size: 0.88rem;
+  transition: background 140ms, border-color 140ms;
+}
+.submit-btn:hover:not(:disabled) {
+  background: rgba(139,104,64,0.16);
+  border-color: rgba(126,200,200,0.52);
+}
+.submit-btn:disabled { opacity: 0.48; cursor: not-allowed; }
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.empty-state {
+  padding: 56px 32px 48px;
+  text-align: center;
+}
+.empty-state h2 {
+  margin: 0 0 10px;
+  font-family: "IM Fell English", Georgia, serif;
+  font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+  color: #8b6840;
+}
+.empty-state p {
+  margin: 0 auto;
+  max-width: 460px;
+  color: #a08060; font-style: italic; font-size: 0.86rem; line-height: 1.6;
+}
+.empty-inscription {
+  display: block; max-width: 440px; margin: 20px auto 0;
+  padding: 14px 18px;
+  border: 1px solid rgba(136,111,76,0.18);
+  border-left: 3px solid rgba(196,169,110,0.55);
+  border-radius: 6px;
+  background: rgba(255,252,247,0.72);
+  color: #685744;
+  font-size: 0.80rem; font-style: italic; line-height: 1.65;
+  text-align: left;
+}
+
+/* ── Loading panel ───────────────────────────────────────────────────────── */
+.loading-panel { padding: 26px 24px; margin-top: 18px; }
+
+.loading-question {
+  margin: 0 0 16px;
+  color: #584937; font-style: italic; font-size: 0.88rem;
+  display: flex; align-items: center; gap: 10px;
+}
+
+.dots { display: inline-flex; gap: 4px; margin-left: 4px; }
+.dots span {
+  display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: #8b6840;
+  animation: dot-pulse 1.2s ease-in-out infinite;
+}
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dot-pulse {
+  0%,80%,100% { opacity:0.25; transform:scale(0.7); }
+  40%         { opacity:1;    transform:scale(1);   }
+}
+
+.steps-list { display: grid; gap: 6px; }
+.step-row {
+  display: flex; align-items: center; gap: 11px;
+  padding: 7px 11px;
+  border: 1px solid rgba(136,111,76,0.11);
+  border-radius: 6px;
+  background: rgba(255,252,247,0.60);
+  font-size: 0.74rem; color: #584937;
+  transition: background 300ms;
+}
+.step-row.done    { background: rgba(70,126,80,0.05); }
+.step-row.running { background: rgba(126,200,200,0.06); }
+.si {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: "DM Mono", monospace; font-size: 0.62rem;
+  border: 1px solid rgba(136,111,76,0.20);
+  background: rgba(139,104,64,0.07);
+  color: #8b6840;
+}
+.si.done    { background: rgba(70,126,80,0.12);  border-color: rgba(70,126,80,0.28);  color:#315f39; }
+.si.running { background: rgba(126,200,200,0.13); border-color: rgba(126,200,200,0.36); color:#3a8f8f; animation: spin 1.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Result panel ────────────────────────────────────────────────────────── */
+.result-panel { padding: 24px 26px; margin-top: 18px; }
+
+.result-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(136,111,76,0.12);
+  margin-bottom: 18px;
+}
+.result-q {
+  color: #2c1a0e;
+  font-family: "IM Fell English", Georgia, serif;
+  font-size: clamp(0.96rem, 1.8vw, 1.1rem);
+  font-style: italic; line-height: 1.3;
+}
+.llm-badge {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border: 1px solid rgba(136,111,76,0.20);
+  border-radius: 5px;
+  background: rgba(139,104,64,0.07);
+  color: #7d6849;
+  font-family: "DM Mono", "Space Mono", monospace;
+  font-size: 0.60rem; text-transform: uppercase;
+}
+
+/* Answer body — markdown rendering target */
+.answer-body {
+  color: #2c1a0e; font-size: 0.90rem; line-height: 1.70;
+  border-left: 3px solid rgba(126,200,200,0.44);
+  padding-left: 18px;
+}
+.answer-body p { margin: 0 0 0.9em; }
+.answer-body p:last-child { margin-bottom: 0; }
+.answer-body strong { color: #1d140d; }
+.answer-body em     { color: #584937; }
+.answer-body ul, .answer-body ol { margin: 0 0 0.9em; padding-left: 1.5em; }
+.answer-body li { margin-bottom: 0.25em; }
+.answer-body hr { border: none; border-top: 1px solid rgba(136,111,76,0.16); margin: 14px 0; }
+.answer-body h3 { margin: 1em 0 0.4em; font-family: "IM Fell English", Georgia, serif; font-size: 1.0rem; color: #2c1a0e; }
+.answer-body h4 { margin: 0.8em 0 0.3em; font-size: 0.88rem; color: #685744; }
+.answer-body table {
+  border-collapse: collapse; width: 100%;
+  font-size: 0.76rem; margin: 0.9em 0;
+}
+.answer-body th {
+  padding: 5px 9px;
+  border: 1px solid rgba(136,111,76,0.20);
+  background: rgba(139,104,64,0.07);
+  text-align: left;
+  font-family: "DM Mono", monospace; font-size: 0.66rem;
+  text-transform: uppercase; color: #685744;
+}
+.answer-body td {
+  padding: 5px 9px;
+  border: 1px solid rgba(136,111,76,0.12);
+  vertical-align: top;
+}
+.source-cite {
+  display: inline-block;
+  padding: 1px 5px;
+  border: 1px solid rgba(126,200,200,0.40);
+  border-radius: 4px;
+  background: rgba(126,200,200,0.09);
+  color: #3a8f8f;
+  font-family: "DM Mono", monospace; font-size: 0.72rem;
+  font-style: normal; cursor: default;
+  transition: background 120ms;
+}
+.source-cite:hover { background: rgba(126,200,200,0.18); }
+.icode {
+  padding: 1px 5px; border-radius: 4px;
+  background: rgba(139,104,64,0.10);
+  font-family: "DM Mono", monospace; font-size: 0.84em;
+  color: #4a3520;
+}
+
+/* ── Sources table ───────────────────────────────────────────────────────── */
+.sources-panel {
+  margin-top: 16px;
+  border: 1px solid rgba(136,111,76,0.15);
+  border-radius: 8px;
+  background: rgba(255,252,247,0.72);
+  overflow: hidden;
+}
+.sources-head {
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(136,111,76,0.12);
+  background: rgba(139,104,64,0.06);
+  color: #685744;
+  font-family: "DM Mono", "Space Mono", monospace;
+  font-size: 0.64rem; text-transform: uppercase;
+}
+.src-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0,1fr) 58px 66px;
+  gap: 12px; align-items: center;
+  padding: 9px 16px;
+  border-bottom: 1px solid rgba(136,111,76,0.07);
+  transition: background 110ms;
+}
+.src-row:last-child { border-bottom: none; }
+.src-row:hover { background: rgba(139,104,64,0.04); }
+.src-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1px solid rgba(136,111,76,0.20);
+  display: flex; align-items: center; justify-content: center;
+  color: #8b6840;
+  font-family: "DM Mono", monospace; font-size: 0.60rem;
+}
+.src-title {
+  color: #2c1a0e; font-size: 0.77rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.src-meta {
+  color: #685744;
+  font-family: "DM Mono", monospace; font-size: 0.64rem;
+  text-align: right;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.src-score {
+  color: #7ec8c8;
+  font-family: "DM Mono", monospace; font-size: 0.64rem;
+  text-align: right;
+}
+
+/* ── Error panel ─────────────────────────────────────────────────────────── */
+.error-panel {
+  margin-top: 18px; padding: 22px 24px;
+  border: 1px solid rgba(151,67,58,0.22);
+  border-radius: 8px;
+  background: rgba(255,252,247,0.88);
+}
+.error-title {
+  color: #7a332c;
+  font-family: "DM Mono", monospace; font-size: 0.68rem;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.error-msg {
+  color: #584937;
+  font-family: "DM Mono", monospace; font-size: 0.78rem;
+  line-height: 1.5; white-space: pre-wrap;
+}
+.error-hint {
+  margin-top: 12px; padding: 10px 14px;
+  border: 1px solid rgba(136,111,76,0.16); border-radius: 6px;
+  background: rgba(139,104,64,0.06); color: #685744;
+  font-family: "DM Mono", monospace; font-size: 0.72rem; line-height: 1.5;
+}
+
+/* ── Elapsed chip ────────────────────────────────────────────────────────── */
+.elapsed-chip {
+  display: inline-block; margin-top: 12px;
+  padding: 2px 7px;
+  border: 1px solid rgba(136,111,76,0.14); border-radius: 5px;
+  background: rgba(255,252,247,0.60);
+  color: #8b6840;
+  font-family: "DM Mono", monospace; font-size: 0.62rem;
+}
+
+/* ── Boot bar ────────────────────────────────────────────────────────────── */
+.boot-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+  padding: 14px 20px;
+  border: 1px solid rgba(136,111,76,0.22);
+  border-radius: 8px;
+  background: rgba(255,252,247,0.92);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(56,42,24,0.08);
+  margin-bottom: 16px;
+}
+.boot-status {
+  display: flex; align-items: center; gap: 10px;
+  font-family: "DM Mono", monospace; font-size: 0.75rem; color: #584937;
+}
+.boot-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(136,111,76,0.30);
+  transition: background 300ms;
+}
+.boot-dot.running {
+  background: #467e50;
+  box-shadow: 0 0 0 0 rgba(70,126,80,0.6);
+  animation: boot-pulse 1.4s ease-out infinite;
+}
+.boot-dot.idle  { background: rgba(136,111,76,0.30); box-shadow: none; }
+.boot-dot.error { background: #9a554c; box-shadow: 0 0 6px rgba(154,85,76,0.5); }
+@keyframes boot-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(70,126,80,0.55); }
+  70%  { box-shadow: 0 0 0 8px rgba(70,126,80,0); }
+  100% { box-shadow: 0 0 0 0 rgba(70,126,80,0); }
+}
+.boot-btn {
+  min-height: 36px; padding: 0 22px;
+  border: 1px solid rgba(126,200,200,0.40);
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(62,143,143,0.14), rgba(126,200,200,0.10));
+  color: #1e4f4f;
+  font-family: "DM Mono", monospace; font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 140ms, border-color 140ms, transform 80ms;
+}
+.boot-btn:hover  { background: rgba(126,200,200,0.22); border-color: rgba(62,143,143,0.55); }
+.boot-btn:active { transform: translateY(1px); }
+.boot-btn.boot-stop {
+  border-color: rgba(151,67,58,0.32);
+  background: rgba(151,67,58,0.07);
+  color: #6e2d27;
+}
+.boot-btn.boot-stop:hover { background: rgba(151,67,58,0.14); }
+
+/* ── Live log ────────────────────────────────────────────────────────────── */
+.log-panel {
+  border: 1px solid rgba(136,111,76,0.18); border-radius: 8px;
+  background: rgba(28,18,10,0.95);
+  overflow: hidden; margin-bottom: 16px;
+}
+.log-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 14px;
+  background: rgba(136,111,76,0.14);
+  font-family: "DM Mono", monospace; font-size: 0.60rem;
+  text-transform: uppercase; letter-spacing: 0.05em; color: #8b6840;
+}
+.log-body {
+  padding: 12px 14px;
+  font-family: "DM Mono", "Courier New", monospace; font-size: 0.68rem;
+  line-height: 1.55; color: #d4c8b0;
+  max-height: 260px; overflow-y: auto; margin: 0;
+  white-space: pre-wrap; word-break: break-word;
+}
+.log-body::-webkit-scrollbar { width: 4px; }
+.log-body::-webkit-scrollbar-thumb { background: rgba(136,111,76,0.30); border-radius: 2px; }
+
+/* ── Pipeline view ───────────────────────────────────────────────────────── */
+.pipeline-view {
+  display: none;
+  position: relative; z-index: 1;
+  padding: 60px 32px 72px;
+  min-height: calc(100vh - 42px);
+}
+
+.pipe-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.pipe-stat {
+  padding: 14px 16px;
+  border: 1px solid rgba(136,111,76,0.18);
+  border-radius: 8px;
+  background: rgba(255,252,247,0.88);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(56,42,24,0.05);
+}
+.pipe-stat-val {
+  display: block;
+  font-family: "DM Mono", "Space Mono", monospace;
+  font-size: 1.55rem; font-weight: 500;
+  color: #1d140d; margin-bottom: 3px;
+}
+.pipe-stat-val.teal { color: #246060; }
+.pipe-stat-val.amber { color: #7a5a1a; }
+.pipe-stat-lbl {
+  font-family: "DM Mono", "Space Mono", monospace;
+  font-size: 0.58rem; text-transform: uppercase;
+  letter-spacing: 0.05em; color: #8b6840;
+}
+
+.pipe-controls {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 12px; flex-wrap: wrap;
+}
+.pipe-search {
+  flex: 1; min-width: 160px; max-width: 280px; height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(136,111,76,0.20); border-radius: 6px;
+  background: rgba(255,252,247,0.92); color: #1d140d;
+  font-family: "DM Mono", monospace; font-size: 0.70rem; outline: none;
+}
+.pipe-search:focus { border-color: rgba(126,200,200,0.48); }
+.pipe-select {
+  height: 30px; padding: 0 8px;
+  border: 1px solid rgba(136,111,76,0.18); border-radius: 6px;
+  background: rgba(255,252,247,0.88); color: #584937;
+  font-family: "DM Mono", monospace; font-size: 0.66rem; cursor: pointer;
+}
+.pipe-btn {
+  height: 30px; padding: 0 12px;
+  border: 1px solid rgba(126,200,200,0.32); border-radius: 6px;
+  background: rgba(126,200,200,0.07); color: #246060;
+  font-family: "DM Mono", monospace; font-size: 0.66rem;
+  cursor: pointer; transition: background 120ms; white-space: nowrap;
+}
+.pipe-btn:hover { background: rgba(126,200,200,0.15); }
+.pipe-btn.amber { border-color: rgba(165,121,47,0.32); color: #7a5a1a; background: rgba(165,121,47,0.07); }
+.pipe-btn.amber:hover { background: rgba(165,121,47,0.14); }
+
+/* File table */
+.pipe-table-wrap {
+  border: 1px solid rgba(136,111,76,0.18); border-radius: 8px;
+  background: rgba(255,252,247,0.88); backdrop-filter: blur(10px);
+  box-shadow: 0 8px 28px rgba(56,42,24,0.07);
+  overflow: hidden; margin-bottom: 18px;
+}
+.pipe-table { width: 100%; border-collapse: collapse; }
+.pipe-table th {
+  padding: 8px 13px;
+  border-bottom: 1px solid rgba(136,111,76,0.14);
+  background: rgba(139,104,64,0.06);
+  text-align: left;
+  font-family: "DM Mono", monospace; font-size: 0.58rem;
+  text-transform: uppercase; letter-spacing: 0.05em; color: #685744;
+  white-space: nowrap; cursor: pointer; user-select: none;
+}
+.pipe-table th:hover { background: rgba(139,104,64,0.10); }
+.pipe-table th.sort-asc::after  { content: " ↑"; opacity: 0.6; }
+.pipe-table th.sort-desc::after { content: " ↓"; opacity: 0.6; }
+.pipe-table td {
+  padding: 9px 13px;
+  border-bottom: 1px solid rgba(136,111,76,0.065);
+  font-size: 0.77rem; vertical-align: middle;
+}
+.pipe-table tr:last-child td { border-bottom: none; }
+.pipe-table tbody tr:hover td { background: rgba(139,104,64,0.025); }
+
+.file-name-main {
+  color: #2c1a0e; font-size: 0.77rem;
+  max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  display: block; cursor: default;
+}
+.file-folder-sub {
+  color: #8b6840; font-family: "DM Mono", monospace; font-size: 0.58rem;
+  max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  display: block; margin-top: 1px;
+}
+.row-num { font-family: "DM Mono", monospace; font-size: 0.60rem; color: #b09070; }
+
+.sbadge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 7px; border-radius: 5px;
+  font-family: "DM Mono", monospace; font-size: 0.60rem;
+  white-space: nowrap; border: 1px solid transparent;
+}
+.sbadge-indexed    { background:rgba(70,126,80,0.10);   color:#2e5936; border-color:rgba(70,126,80,0.22); }
+.sbadge-error      { background:rgba(151,67,58,0.10);   color:#6e2d27; border-color:rgba(151,67,58,0.22); }
+.sbadge-queued     { background:rgba(80,120,180,0.10);  color:#2a4a7a; border-color:rgba(80,120,180,0.22); }
+.sbadge-pending    { background:rgba(165,121,47,0.09);  color:#6a4c12; border-color:rgba(165,121,47,0.20); }
+.sbadge-complete   { background:rgba(62,143,143,0.10);  color:#1e5555; border-color:rgba(62,143,143,0.22); }
+.sbadge-not_started{ background:rgba(136,111,76,0.07);  color:#7a6040; border-color:rgba(136,111,76,0.15); }
+
+.chunks-val { font-family:"DM Mono",monospace; font-size:0.72rem; color:#3a8f8f; }
+.ts-val { font-family:"DM Mono",monospace; font-size:0.58rem; color:#a08060; white-space:nowrap; }
+
+.era-pips { display:inline-flex; gap:2px; align-items:center; margin-left:4px; }
+.era-pip {
+  width:7px; height:7px; border-radius:50%;
+  border:1px solid rgba(0,0,0,0.08);
+}
+
+.action-btns { display:flex; gap:4px; }
+.act-btn {
+  height:22px; padding:0 7px;
+  border:1px solid rgba(136,111,76,0.18); border-radius:4px;
+  background:rgba(139,104,64,0.05); color:#584937;
+  font-family:"DM Mono",monospace; font-size:0.58rem;
+  cursor:pointer; white-space:nowrap; transition:background 100ms;
+}
+.act-btn:hover { background:rgba(139,104,64,0.13); }
+.act-btn.act-graph { border-color:rgba(62,143,143,0.24); color:#1e5555; }
+.act-btn.act-graph:hover { background:rgba(62,143,143,0.10); }
+.act-btn.act-deq   { border-color:rgba(151,67,58,0.20); color:#6e2d27; }
+.act-btn.act-deq:hover { background:rgba(151,67,58,0.09); }
+
+/* Queue panels */
+.queue-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
+.queue-card {
+  border:1px solid rgba(136,111,76,0.18); border-radius:8px;
+  background:rgba(255,252,247,0.88); backdrop-filter:blur(10px);
+  padding:15px 16px;
+}
+.queue-card-head {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:10px;
+}
+.queue-card-title {
+  font-family:"DM Mono",monospace; font-size:0.60rem;
+  text-transform:uppercase; letter-spacing:0.05em; color:#685744;
+}
+.queue-count-badge {
+  padding:1px 6px; border-radius:4px;
+  border:1px solid rgba(136,111,76,0.18);
+  background:rgba(139,104,64,0.07);
+  font-family:"DM Mono",monospace; font-size:0.58rem; color:#8b6840;
+}
+.queue-items {
+  min-height:40px; max-height:110px; overflow-y:auto;
+  border:1px solid rgba(136,111,76,0.12); border-radius:5px;
+  background:rgba(255,252,247,0.60); padding:5px 7px; margin-bottom:9px;
+}
+.queue-items::-webkit-scrollbar { width:3px; }
+.queue-items::-webkit-scrollbar-thumb { background:rgba(136,111,76,0.18); border-radius:2px; }
+.q-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:2px 0;
+  font-family:"DM Mono",monospace; font-size:0.60rem; color:#584937;
+  border-bottom:1px solid rgba(136,111,76,0.06);
+}
+.q-item:last-child { border-bottom:none; }
+.q-item-path { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-right:6px; }
+.q-rm {
+  flex-shrink:0; background:none; border:none; cursor:pointer;
+  color:#b09070; font-size:0.80rem; padding:0 2px; line-height:1;
+}
+.q-rm:hover { color:#7a332c; }
+.q-empty { color:#a08060; font-style:italic; font-size:0.70rem; }
+
+.run-hint {
+  margin-top:14px; padding:11px 14px;
+  border:1px solid rgba(136,111,76,0.14); border-radius:6px;
+  background:rgba(139,104,64,0.04); color:#685744;
+  font-family:"DM Mono",monospace; font-size:0.67rem; line-height:1.65;
+}
+.run-hint code {
+  background:rgba(139,104,64,0.10); padding:1px 5px; border-radius:3px;
+  color:#2c1a0e;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 780px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; max-height: 52vh; }
+  .main { padding: 16px 16px 40px; }
+  .queue-grid { grid-template-columns: 1fr; }
+  .pipeline-view { padding: 56px 14px 48px; }
+}
+</style>
+</head>
+<body>
+<!-- ── Top navigation ─────────────────────────────────────────────────────── -->
+<nav class="top-nav">
+  <span class="nav-brand">Auguste Laurent Society</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-view="query">Library Query</button>
+    <button class="nav-tab" data-view="constellation">Constellation</button>
+    <button class="nav-tab" data-view="scriptorium">Scriptorium</button>
+    <button class="nav-tab" data-view="pipeline">Pipeline</button>
+  </div>
+</nav>
+
+<!-- ── Iframe views (lazy-loaded) ─────────────────────────────────────────── -->
+<iframe id="view-constellation" class="view-frame" title="Constellation" allowfullscreen></iframe>
+<iframe id="view-scriptorium"   class="view-frame" title="Scriptorium"   allowfullscreen></iframe>
+
+<!-- ── Pipeline view ──────────────────────────────────────────────────────── -->
+<div class="pipeline-view" id="view-pipeline">
+
+  <!-- ── Boot bar ─────────────────────────────────────────────────────────── -->
+  <div class="boot-bar">
+    <div class="boot-status" id="boot-status">
+      <span class="boot-dot" id="boot-dot"></span>
+      <span id="boot-label">Checking indexer…</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="boot-btn" id="boot-run-btn" title="Start full GPU indexing run (Ctrl+B)">
+        ⚡ BOOT INDEXER
+      </button>
+      <button class="boot-btn boot-stop" id="boot-stop-btn" style="display:none" title="Stop indexer gracefully">
+        ■ STOP
+      </button>
+      <select class="pipe-select" id="boot-device" style="height:36px;font-size:0.70rem">
+        <option value="cuda">cuda (GPU)</option>
+        <option value="cpu">cpu</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Live log -->
+  <div class="log-panel" id="log-panel" style="display:none">
+    <div class="log-head">
+      <span>Indexer Log</span>
+      <label style="display:flex;align-items:center;gap:5px;font-weight:normal">
+        <input type="checkbox" id="log-autoscroll" checked> auto-scroll
+      </label>
+    </div>
+    <pre class="log-body" id="log-body"></pre>
+  </div>
+
+  <!-- Summary bar -->
+  <div class="pipe-summary">
+    <div class="pipe-stat">
+      <span class="pipe-stat-val" id="ps-total">—</span>
+      <span class="pipe-stat-lbl">Source Files</span>
+    </div>
+    <div class="pipe-stat">
+      <span class="pipe-stat-val teal" id="ps-indexed">—</span>
+      <span class="pipe-stat-lbl">Indexed</span>
+    </div>
+    <div class="pipe-stat">
+      <span class="pipe-stat-val" id="ps-chunks">—</span>
+      <span class="pipe-stat-lbl">Total Chunks</span>
+    </div>
+    <div class="pipe-stat">
+      <span class="pipe-stat-val amber" id="ps-graphed">—</span>
+      <span class="pipe-stat-lbl">Graph Pass Done</span>
+    </div>
+    <div class="pipe-stat">
+      <span class="pipe-stat-val" id="ps-qi">—</span>
+      <span class="pipe-stat-lbl">Queue · Index</span>
+    </div>
+    <div class="pipe-stat">
+      <span class="pipe-stat-val" id="ps-qg">—</span>
+      <span class="pipe-stat-lbl">Queue · Graph</span>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="pipe-controls">
+    <input class="pipe-search" id="pipe-search" type="text" placeholder="Filter files…">
+    <select class="pipe-select" id="pipe-filter-idx">
+      <option value="">All index states</option>
+      <option value="indexed">Indexed</option>
+      <option value="error">Error</option>
+      <option value="queued">Queued</option>
+      <option value="not_started">Not started</option>
+    </select>
+    <select class="pipe-select" id="pipe-filter-grph">
+      <option value="">All graph states</option>
+      <option value="complete">Graph complete</option>
+      <option value="queued">Graph queued</option>
+      <option value="pending">Graph pending</option>
+    </select>
+    <button class="pipe-btn" id="pipe-refresh">↻ Refresh</button>
+    <button class="pipe-btn amber" id="pipe-sel-all">Select All Visible</button>
+    <button class="pipe-btn" id="pipe-queue-sel-idx">+ Queue Selected → Index</button>
+    <button class="pipe-btn" id="pipe-queue-sel-grph">+ Queue Selected → Graph</button>
+  </div>
+
+  <!-- File table -->
+  <div class="pipe-table-wrap">
+    <table class="pipe-table">
+      <thead>
+        <tr>
+          <th style="width:30px"><input type="checkbox" id="pipe-chk-all" title="Select all"></th>
+          <th style="width:36px" data-sort="idx">#</th>
+          <th data-sort="file_name">Source File</th>
+          <th data-sort="index_status">Ingestion</th>
+          <th data-sort="chunks_indexed">Chunks</th>
+          <th data-sort="graph_status">Graph Pass</th>
+          <th data-sort="objects_extracted">Objects</th>
+          <th data-sort="index_updated_at">Updated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="pipe-tbody">
+        <tr><td colspan="9" style="text-align:center;padding:32px;color:#8b6840;font-style:italic">Loading pipeline status…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Queue panels -->
+  <div class="queue-grid">
+    <div class="queue-card" id="qcard-index">
+      <div class="queue-card-head">
+        <span class="queue-card-title">Index Queue</span>
+        <span class="queue-count-badge" id="qi-badge">0</span>
+      </div>
+      <div class="queue-items" id="qi-list"><span class="q-empty">Queue is empty.</span></div>
+      <div style="display:flex;gap:6px">
+        <button class="pipe-btn" style="flex:1" id="qi-clear">Clear</button>
+        <button class="pipe-btn amber" style="flex:2" id="qi-export">Export queue.json</button>
+      </div>
+    </div>
+    <div class="queue-card" id="qcard-graph">
+      <div class="queue-card-head">
+        <span class="queue-card-title">Graph Queue</span>
+        <span class="queue-count-badge" id="qg-badge">0</span>
+      </div>
+      <div class="queue-items" id="qg-list"><span class="q-empty">Queue is empty.</span></div>
+      <div style="display:flex;gap:6px">
+        <button class="pipe-btn" style="flex:1" id="qg-clear">Clear</button>
+        <button class="pipe-btn amber" style="flex:2" id="qg-export">Export queue.json</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Run hints -->
+  <div class="run-hint">
+    <strong>Run ingestion on queue:</strong><br>
+    <code>python build_index.py --queue pipeline_queue.json --device cuda</code><br><br>
+    <strong>Run first-pass graph extraction on queue:</strong><br>
+    <code>python graph_builder.py --queue pipeline_queue.json --ontology-pass 1</code><br><br>
+    <strong>Re-index all known files:</strong><br>
+    <code>python build_index.py --device cuda --max-file-mb 500</code>
+  </div>
+
+</div>
+
+<div class="layout" id="view-query">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <p class="eyebrow">Auguste Laurent Society</p>
+    <h1 class="sidebar-title">Library<br>Query</h1>
+    <div class="sep"></div>
+
+    <!-- Backend selector -->
+    <p class="section-label">Generation Backend</p>
+    <div class="llm-tabs">
+      <button class="llm-tab active" data-llm="openrouter">Ensemble</button>
+      <button class="llm-tab"        data-llm="claude">Claude</button>
+      <button class="llm-tab"        data-llm="openai">OpenAI</button>
+    </div>
+    <div id="ensemble-info"></div>
+
+    <div class="sep"></div>
+
+    <!-- Verbose toggle -->
+    <div class="toggle-row">
+      <span class="toggle-label">Show pipeline steps</span>
+      <label class="toggle">
+        <input type="checkbox" id="verbose-toggle">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Index status -->
+    <p class="section-label">Index Status</p>
+    <div id="index-status">
+      <div class="status-row">
+        <span class="sd off" id="sd"></span>
+        <span id="st" style="color:#8b6840;font-style:italic">Connecting…</span>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Query history -->
+    <p class="section-label">Recent Queries</p>
+    <div id="history-list"></div>
+  </aside>
+
+  <!-- ── Main ────────────────────────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- Query input panel -->
+    <div class="panel query-panel">
+      <h1 class="query-heading">Query the Archive</h1>
+      <p class="query-sub">Search the indexed library of the Auguste Laurent Society collection</p>
+      <textarea id="qi" class="query-input" rows="3"
+        placeholder="Ask a question about the archive…  (Ctrl + Enter to submit)"></textarea>
+      <div class="query-controls">
+        <span class="llm-chip" id="llm-chip">via openrouter</span>
+        <button class="submit-btn" id="sb">Submit Query</button>
+      </div>
+    </div>
+
+    <!-- Dynamic results area -->
+    <div id="results">
+      <div class="empty-state">
+        <h2>Await Inquiry</h2>
+        <p>The archive is indexed and ready. Submit a question to retrieve passages and generate a scholarly response.</p>
+        <span class="empty-inscription">
+          "The history of chemistry is not the history of a science but of a method;
+           the method is that of observation, of experimentation, and of induction."
+          <br><br>— Auguste Laurent, <em>Méthode de chimie</em>, 1854
+        </span>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+'use strict';
+
+// ── Config ────────────────────────────────────────────────────────────────────
+const API   = 'http://localhost:5175';
+const HIST  = 'als_history_v1';
+
+const MODELS = [
+  { id:'nemotron-3-120b',  color:'#7ec8c8', label:'nemotron-3-super-120b' },
+  { id:'llama-3.3-70b',    color:'#a8d8a8', label:'llama-3.3-70b-instruct' },
+  { id:'gpt-oss-120b',     color:'#80b8f0', label:'gpt-oss-120b' },
+  { id:'hermes-3-405b',    color:'#c9a96e', label:'hermes-3-405b', synth:true },
+];
+
+const STEPS = {
+  openrouter: [
+    'HyDE expansion — 3 models in parallel',
+    'Dense + sparse embedding',
+    'Hybrid retrieval · RRF fusion',
+    'Cross-encoder reranking',
+    'Generation — 4 models in parallel',
+    'Scholarly synthesis',
+  ],
+  claude: [
+    'HyDE hypothesis (Claude Haiku)',
+    'Dense + sparse embedding',
+    'Hybrid retrieval · RRF fusion',
+    'Cross-encoder reranking',
+    'Generation (Claude Sonnet)',
+  ],
+  openai: [
+    'HyDE hypothesis (GPT-4o-mini)',
+    'Dense + sparse embedding',
+    'Hybrid retrieval · RRF fusion',
+    'Cross-encoder reranking',
+    'Generation (GPT-4o)',
+  ],
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let llm      = 'openrouter';
+let loading  = false;
+let verbose  = false;
+let history  = (() => { try { return JSON.parse(localStorage.getItem(HIST) || '[]'); } catch { return []; } })();
+
+// ── DOM ───────────────────────────────────────────────────────────────────────
+const qi     = document.getElementById('qi');
+const sb     = document.getElementById('sb');
+const res    = document.getElementById('results');
+const chip   = document.getElementById('llm-chip');
+const sd     = document.getElementById('sd');
+const st     = document.getElementById('st');
+const ei     = document.getElementById('ensemble-info');
+const hl     = document.getElementById('history-list');
+const vt     = document.getElementById('verbose-toggle');
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+function init() {
+  renderEnsemble();
+  renderHistory();
+  checkStatus();
+
+  document.querySelectorAll('.llm-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      llm = btn.dataset.llm;
+      document.querySelectorAll('.llm-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      chip.textContent = 'via ' + llm;
+      renderEnsemble();
+    });
+  });
+
+  sb.addEventListener('click', submit);
+  qi.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); }
+  });
+  vt.addEventListener('change', () => { verbose = vt.checked; });
+  setInterval(checkStatus, 30000);
+}
+
+// ── Status ────────────────────────────────────────────────────────────────────
+async function checkStatus() {
+  try {
+    const r = await fetch(API + '/api/status', { signal: AbortSignal.timeout(3000) });
+    if (r.ok) {
+      const d = await r.json();
+      sd.className = 'sd on';
+      st.textContent = num(d.chunk_count || 0) + ' chunks · ' + (d.collection || 'als_library');
+      st.style.color = '#467e50'; st.style.fontStyle = 'normal';
+    } else throw new Error();
+  } catch {
+    sd.className = 'sd off';
+    st.textContent = 'Server offline'; st.style.color = '#8b6840'; st.style.fontStyle = 'italic';
+  }
+}
+
+// ── Ensemble badges ───────────────────────────────────────────────────────────
+function renderEnsemble() {
+  if (llm !== 'openrouter') { ei.innerHTML = ''; return; }
+  ei.innerHTML = MODELS.map(m => `
+    <div class="model-badge">
+      <span class="model-dot" style="--c:${m.color}"></span>
+      <span>${m.label}</span>
+      ${m.synth ? '<span class="synth-label">synthesis</span>' : ''}
+    </div>`).join('');
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+function pushHistory(q) {
+  history = [q, ...history.filter(h => h !== q)].slice(0, 12);
+  try { localStorage.setItem(HIST, JSON.stringify(history)); } catch {}
+  renderHistory();
+}
+
+function renderHistory() {
+  if (!history.length) { hl.innerHTML = '<span class="hist-empty">No queries yet.</span>'; return; }
+  hl.innerHTML = history.map(q =>
+    `<button class="hist-item" title="${esc(q)}">${esc(q)}</button>`
+  ).join('');
+  hl.querySelectorAll('.hist-item').forEach((btn, i) => {
+    btn.addEventListener('click', () => { qi.value = history[i]; qi.focus(); });
+  });
+}
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+async function submit() {
+  const q = qi.value.trim();
+  if (!q || loading) return;
+
+  loading = true;
+  sb.disabled = true; sb.textContent = 'Querying…';
+
+  showLoading(q);
+
+  try {
+    const r = await fetch(API + '/api/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q, llm, verbose }),
+    });
+    clearStepTimer();
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({ error: 'HTTP ' + r.status }));
+      showError(q, e.error || 'Server error ' + r.status);
+    } else {
+      const d = await r.json();
+      if (d.error) showError(q, d.error);
+      else { showResult(q, d); pushHistory(q); }
+    }
+  } catch (e) {
+    clearStepTimer();
+    showError(q, 'Cannot reach server at ' + API + '.\n\nStart with:\n  python query.py --serve');
+  } finally {
+    loading = false; sb.disabled = false; sb.textContent = 'Submit Query';
+  }
+}
+
+// ── Loading ───────────────────────────────────────────────────────────────────
+let _stepTimer = null;
+function clearStepTimer() { if (_stepTimer) { clearInterval(_stepTimer); _stepTimer = null; } }
+
+function showLoading(q) {
+  clearStepTimer();
+  const steps = STEPS[llm] || STEPS.openrouter;
+  res.innerHTML = `
+    <div class="panel loading-panel">
+      <div class="loading-question">
+        "${esc(q.length > 90 ? q.slice(0,90) + '…' : q)}"
+        <span class="dots"><span></span><span></span><span></span></span>
+      </div>
+      <div class="steps-list">
+        ${steps.map((s, i) => `
+          <div class="step-row${i===0?' running':''}" id="srow-${i}">
+            <span class="si${i===0?' running':''}" id="si-${i}">${i===0?'↻':(i+1)}</span>
+            ${esc(s)}
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  // Advance step indicator based on estimated timing
+  // OpenRouter queries take ~60-90s for 6 steps → ~12s/step average
+  // Claude/OpenAI take ~20-30s for 5 steps → ~5s/step average
+  const interval = llm === 'openrouter' ? 9500 : 5000;
+  let cur = 0;
+  _stepTimer = setInterval(() => {
+    cur++;
+    if (cur >= steps.length) { clearStepTimer(); return; }
+    const prev = document.getElementById('srow-' + (cur-1));
+    const curr = document.getElementById('srow-' + cur);
+    const pi   = document.getElementById('si-'   + (cur-1));
+    const ci   = document.getElementById('si-'   + cur);
+    if (prev) { prev.className = 'step-row done';    pi.className = 'si done';    pi.textContent = '✓'; }
+    if (curr) { curr.className = 'step-row running'; ci.className = 'si running'; ci.textContent = '↻'; }
+  }, interval);
+}
+
+// ── Result ────────────────────────────────────────────────────────────────────
+function showResult(q, d) {
+  const answer  = mdToHtml(d.answer || '');
+  const sources = renderSources(d.sources || []);
+  const elapsed = d.elapsed_s ? `<span class="elapsed-chip">${d.elapsed_s}s</span>` : '';
+
+  res.innerHTML = `
+    <div class="panel result-panel">
+      <div class="result-header">
+        <div class="result-q">"${esc(q)}"</div>
+        <span class="llm-badge">${llm}</span>
+      </div>
+      <div class="answer-body">${answer}</div>
+      ${elapsed}
+    </div>
+    ${sources}`;
+
+  // Scroll citations into view on click
+  res.querySelectorAll('.source-cite').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.textContent.replace(/\D/g,''),10) - 1;
+      const row = res.querySelectorAll('.src-row')[idx];
+      if (row) row.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    });
+  });
+}
+
+function renderSources(srcs) {
+  if (!srcs.length) return '';
+  const rows = srcs.map((s, i) => `
+    <div class="src-row">
+      <span class="src-num">${i+1}</span>
+      <span class="src-title" title="${esc(s.title||'')}">${esc((s.title||'Unknown').replace(/_/g,' '))}</span>
+      <span class="src-meta">${esc((s.author||'').slice(0,16))}${s.year?' · '+s.year:''}</span>
+      <span class="src-score">${typeof s.rrf_score==='number'?s.rrf_score.toFixed(4):''}</span>
+    </div>`).join('');
+  return `
+    <div class="sources-panel">
+      <div class="sources-head">Sources Retrieved — ${srcs.length}</div>
+      ${rows}
+    </div>`;
+}
+
+// ── Error ─────────────────────────────────────────────────────────────────────
+function showError(q, msg) {
+  const serverDown = /Cannot reach|Failed to fetch|fetch/i.test(msg);
+  res.innerHTML = `
+    <div class="error-panel">
+      <div class="error-title">Query Failed</div>
+      <div class="error-msg">${esc(msg)}</div>
+      ${serverDown ? `
+        <div class="error-hint">
+          Start the server: <strong>python query.py --serve</strong><br>
+          Then reload this page or resubmit.
+        </div>` : ''}
+    </div>`;
+}
+
+// ── Markdown → HTML ───────────────────────────────────────────────────────────
+function mdToHtml(md) {
+  if (!md) return '';
+  const blocks = md.split(/\n{2,}/);
+  return blocks.map(block => {
+    block = block.trim();
+    if (!block) return '';
+    if (/^-{3,}$/.test(block)) return '<hr>';
+    if (block.startsWith('### ')) return '<h4>' + inline(block.slice(4))  + '</h4>';
+    if (block.startsWith('## '))  return '<h3>' + inline(block.slice(3))  + '</h3>';
+    if (block.startsWith('# '))   return '<h3>' + inline(block.slice(2))  + '</h3>';
+
+    const lines = block.split('\n');
+
+    // Unordered list
+    if (lines.every(l => !l.trim() || /^[\s]*[•\-\*▌]\s/.test(l))) {
+      return '<ul>' + lines.filter(l => l.trim())
+        .map(l => '<li>' + inline(l.replace(/^[\s]*[•\-\*▌]\s+/,'')) + '</li>').join('') + '</ul>';
+    }
+    // Ordered list
+    if (lines.every(l => !l.trim() || /^\s*\d+[.)]\s/.test(l))) {
+      return '<ol>' + lines.filter(l => l.trim())
+        .map(l => '<li>' + inline(l.replace(/^\s*\d+[.)]\s+/,'')) + '</li>').join('') + '</ol>';
+    }
+    // Table (basic — | col | col |)
+    if (lines[0] && lines[0].includes('|') && lines.length >= 2) {
+      const [head, _sep, ...body] = lines;
+      const ths = head.split('|').filter(Boolean).map(c => `<th>${inline(c.trim())}</th>`).join('');
+      const trs = body.map(row =>
+        '<tr>' + row.split('|').filter(Boolean).map(c => `<td>${inline(c.trim())}</td>`).join('') + '</tr>'
+      ).join('');
+      return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+    }
+    return '<p>' + lines.map(inline).join('<br>') + '</p>';
+  }).join('');
+}
+
+function inline(text) {
+  return esc(text)
+    .replace(/\*\*\*(.+?)\*\*\*/g,  '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g,       '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,           '<em>$1</em>')
+    .replace(/`(.+?)`/g,             '<code class="icode">$1</code>')
+    .replace(/\[Source\s*(\d+)(?:[^\]]*)\]/gi, '<cite class="source-cite">[Source $1]</cite>');
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function num(n) { return n.toLocaleString('en-US'); }
+
+// ── Boot / Indexer control ────────────────────────────────────────────────────
+
+let _bootInterval  = null;
+let _logInterval   = null;
+let _indexerRunning = false;
+
+async function fetchIndexerStatus() {
+  try {
+    const r = await fetch(API + '/api/pipeline/indexer', { signal: AbortSignal.timeout(3000) });
+    if (!r.ok) return;
+    const d = await r.json();
+    setBootState(d.running, d.pid);
+  } catch {}
+}
+
+function setBootState(running, pid) {
+  _indexerRunning = running;
+  const dot   = document.getElementById('boot-dot');
+  const label = document.getElementById('boot-label');
+  const runBtn  = document.getElementById('boot-run-btn');
+  const stopBtn = document.getElementById('boot-stop-btn');
+  const logPanel = document.getElementById('log-panel');
+
+  if (running) {
+    dot.className   = 'boot-dot running';
+    label.textContent = `Indexer running  (PID ${pid || '…'})`;
+    runBtn.style.display  = 'none';
+    stopBtn.style.display = '';
+    logPanel.style.display = '';
+    if (!_logInterval) _logInterval = setInterval(fetchLog, 3000);
+  } else {
+    dot.className   = 'boot-dot idle';
+    label.textContent = 'Indexer idle';
+    runBtn.style.display  = '';
+    stopBtn.style.display = 'none';
+    if (_logInterval) { clearInterval(_logInterval); _logInterval = null; }
+  }
+}
+
+async function fetchLog() {
+  try {
+    const r = await fetch(API + '/api/pipeline/log', { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) return;
+    const d = await r.json();
+    const body = document.getElementById('log-body');
+    if (!body) return;
+    const text = [d.stdout, d.stderr ? '\n--- stderr ---\n' + d.stderr : ''].filter(Boolean).join('');
+    body.textContent = text || '(no output yet)';
+    if (document.getElementById('log-autoscroll')?.checked) {
+      body.scrollTop = body.scrollHeight;
+    }
+  } catch {}
+}
+
+async function bootIndexer() {
+  const device = document.getElementById('boot-device').value;
+  try {
+    const r = await fetch(API + '/api/pipeline/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device }),
+    });
+    const d = await r.json();
+    if (d.error) { alert('Boot error: ' + d.error); return; }
+    document.getElementById('log-panel').style.display = '';
+    document.getElementById('log-body').textContent = 'Booting indexer…';
+    setBootState(true, d.pid);
+    fetchPipelineStatus();
+  } catch (e) { alert('Failed to start indexer: ' + e); }
+}
+
+async function stopIndexer() {
+  try {
+    await fetch(API + '/api/pipeline/stop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    setBootState(false, null);
+    fetchPipelineStatus();
+  } catch (e) { alert('Failed to stop indexer: ' + e); }
+}
+
+function initBoot() {
+  document.getElementById('boot-run-btn').addEventListener('click', bootIndexer);
+  document.getElementById('boot-stop-btn').addEventListener('click', stopIndexer);
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'b' && _pipelineInited) { e.preventDefault(); bootIndexer(); }
+  });
+  fetchIndexerStatus();
+  _bootInterval = setInterval(fetchIndexerStatus, 5000);
+}
+
+// ── Pipeline ──────────────────────────────────────────────────────────────────
+
+const ERA_COLORS = ['#c9a96e','#7ec8c8','#a8d8a8','#b8a0d8','#f0a060','#80b8f0','#d4a0c8'];
+
+let _pipeData     = null;
+let _pipeSort     = { col: 'idx', dir: 1 };
+let _pipeSelected = new Set();
+
+function pipeStatusBadge(s) {
+  const map = {
+    indexed:    ['sbadge-indexed',    '✓ indexed'],
+    error:      ['sbadge-error',      '✗ error'],
+    queued:     ['sbadge-queued',     '⊕ queued'],
+    pending:    ['sbadge-pending',    '○ pending'],
+    complete:   ['sbadge-complete',   '✓ complete'],
+    not_started:['sbadge-not_started','— not started'],
+  };
+  const [cls, label] = map[s] || ['sbadge-not_started', s || '—'];
+  return `<span class="sbadge ${cls}">${label}</span>`;
+}
+
+function eraPips(dist) {
+  if (!dist || !Object.keys(dist).length) return '';
+  const pips = Object.entries(dist).map(([era, n]) => {
+    const idx = parseInt(era.replace(/\D/g,''), 10);
+    const c   = ERA_COLORS[idx] || '#888';
+    return `<span class="era-pip" style="background:${c}" title="Calc${idx}: ${n} objects"></span>`;
+  }).join('');
+  return `<span class="era-pips">${pips}</span>`;
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
+  catch { return iso.slice(0,16); }
+}
+
+function fmtNum(n) { return (n||0).toLocaleString('en-US'); }
+
+function renderPipeTable() {
+  if (!_pipeData) return;
+  const search   = (document.getElementById('pipe-search').value || '').toLowerCase();
+  const fIdx     = document.getElementById('pipe-filter-idx').value;
+  const fGrph    = document.getElementById('pipe-filter-grph').value;
+  const { col, dir } = _pipeSort;
+
+  let rows = _pipeData.files.filter(f => {
+    if (search && !f.file_name.toLowerCase().includes(search) && !f.folder.toLowerCase().includes(search)) return false;
+    if (fIdx  && f.index_status !== fIdx)  return false;
+    if (fGrph && f.graph_status !== fGrph) return false;
+    return true;
+  });
+
+  rows.sort((a, b) => {
+    let av = col === 'idx' ? _pipeData.files.indexOf(a) : (a[col] ?? '');
+    let bv = col === 'idx' ? _pipeData.files.indexOf(b) : (b[col] ?? '');
+    if (typeof av === 'string') av = av.toLowerCase();
+    if (typeof bv === 'string') bv = bv.toLowerCase();
+    return (av < bv ? -1 : av > bv ? 1 : 0) * dir;
+  });
+
+  const tbody = document.getElementById('pipe-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:28px;color:#8b6840;font-style:italic">No files match the current filter.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map((f, i) => {
+    const chk = _pipeSelected.has(f.path) ? 'checked' : '';
+    const queuedIdx  = (_pipeData.queue.index_queue ||[]).some(e => e.path === f.path);
+    const queuedGrph = (_pipeData.queue.graph_queue ||[]).some(e => e.path === f.path);
+    const actIdx  = queuedIdx  ? `<button class="act-btn act-deq" data-op="dequeue_index" data-path="${esc(f.path)}">× unqueue</button>`
+                               : `<button class="act-btn" data-op="index" data-path="${esc(f.path)}">+ index</button>`;
+    const actGrph = queuedGrph ? `<button class="act-btn act-deq act-graph" data-op="dequeue_graph" data-path="${esc(f.path)}">× unqueue</button>`
+                               : `<button class="act-btn act-graph" data-op="graph" data-path="${esc(f.path)}">+ graph</button>`;
+    return `
+    <tr>
+      <td><input type="checkbox" class="pipe-row-chk" data-path="${esc(f.path)}" ${chk}></td>
+      <td class="row-num">${i+1}</td>
+      <td>
+        <span class="file-name-main" title="${esc(f.path)}">${esc(f.file_name)}</span>
+        <span class="file-folder-sub" title="${esc(f.folder)}">${esc(f.folder)}</span>
+      </td>
+      <td>${pipeStatusBadge(f.index_status)}</td>
+      <td class="chunks-val">${f.chunks_indexed ? fmtNum(f.chunks_indexed) : '—'}</td>
+      <td>${pipeStatusBadge(f.graph_status)}${eraPips(f.era_distribution)}</td>
+      <td class="chunks-val">${f.objects_extracted ? fmtNum(f.objects_extracted) : '—'}</td>
+      <td class="ts-val">${fmtDate(f.index_updated_at || f.graph_updated_at)}</td>
+      <td><div class="action-btns">${actIdx}${actGrph}</div></td>
+    </tr>`;
+  }).join('');
+
+  // Row checkbox events
+  tbody.querySelectorAll('.pipe-row-chk').forEach(chk => {
+    chk.addEventListener('change', () => {
+      const p = chk.dataset.path;
+      chk.checked ? _pipeSelected.add(p) : _pipeSelected.delete(p);
+    });
+  });
+
+  // Action button events
+  tbody.querySelectorAll('.act-btn[data-op]').forEach(btn => {
+    btn.addEventListener('click', () => pipeQueueOp(btn.dataset.op, [btn.dataset.path]));
+  });
+}
+
+function renderQueuePanels() {
+  if (!_pipeData) return;
+  const { index_queue = [], graph_queue = [] } = _pipeData.queue;
+
+  document.getElementById('qi-badge').textContent = index_queue.length;
+  document.getElementById('qg-badge').textContent = graph_queue.length;
+
+  const renderQ = (items, listId, op) => {
+    const el = document.getElementById(listId);
+    if (!items.length) { el.innerHTML = '<span class="q-empty">Queue is empty.</span>'; return; }
+    el.innerHTML = items.map(e => `
+      <div class="q-item">
+        <span class="q-item-path" title="${esc(e.path)}">${esc(e.path.split('\\').pop())}</span>
+        <button class="q-rm" data-op="${op}" data-path="${esc(e.path)}" title="Remove">×</button>
+      </div>`).join('');
+    el.querySelectorAll('.q-rm').forEach(btn =>
+      btn.addEventListener('click', () => pipeQueueOp(btn.dataset.op, [btn.dataset.path])));
+  };
+
+  renderQ(index_queue, 'qi-list', 'dequeue_index');
+  renderQ(graph_queue, 'qg-list', 'dequeue_graph');
+}
+
+async function fetchPipelineStatus() {
+  try {
+    const r = await fetch(API + '/api/pipeline/status', { signal: AbortSignal.timeout(5000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    _pipeData = await r.json();
+
+    const s = _pipeData.summary;
+    document.getElementById('ps-total').textContent   = fmtNum(s.total_files);
+    document.getElementById('ps-indexed').textContent = fmtNum(s.indexed);
+    document.getElementById('ps-chunks').textContent  = fmtNum(s.total_chunks);
+    document.getElementById('ps-graphed').textContent = fmtNum(s.graphed);
+    document.getElementById('ps-qi').textContent      = fmtNum(s.queued_index);
+    document.getElementById('ps-qg').textContent      = fmtNum(s.queued_graph);
+
+    renderPipeTable();
+    renderQueuePanels();
+  } catch (e) {
+    document.getElementById('pipe-tbody').innerHTML =
+      `<tr><td colspan="9" style="text-align:center;padding:28px;color:#7a332c">Failed to load: ${esc(String(e))}</td></tr>`;
+  }
+}
+
+async function pipeQueueOp(op, paths) {
+  try {
+    const r = await fetch(API + '/api/pipeline/queue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ operation: op, paths }),
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (_pipeData) _pipeData.queue = d.queue;
+    // Refresh status badges in table + queue panels
+    await fetchPipelineStatus();
+  } catch (e) {
+    console.error('Queue op failed:', e);
+  }
+}
+
+function pipeExportQueue(op) {
+  if (!_pipeData) return;
+  const key  = op === 'index' ? 'index_queue' : 'graph_queue';
+  const data = { [key]: _pipeData.queue[key] || [] };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `pipeline_queue_${op}.json`;
+  a.click();
+}
+
+let _pipeRefreshInterval = null;
+
+function initPipeline() {
+  initBoot();
+  document.getElementById('pipe-refresh').addEventListener('click', fetchPipelineStatus);
+  // Auto-refresh file table every 15 s while indexer is running
+  _pipeRefreshInterval = setInterval(() => { if (_indexerRunning) fetchPipelineStatus(); }, 15000);
+
+  document.getElementById('pipe-search').addEventListener('input', renderPipeTable);
+  document.getElementById('pipe-filter-idx').addEventListener('change', renderPipeTable);
+  document.getElementById('pipe-filter-grph').addEventListener('change', renderPipeTable);
+
+  document.getElementById('pipe-chk-all').addEventListener('change', e => {
+    document.querySelectorAll('.pipe-row-chk').forEach(c => {
+      c.checked = e.target.checked;
+      e.target.checked ? _pipeSelected.add(c.dataset.path) : _pipeSelected.delete(c.dataset.path);
+    });
+  });
+
+  document.getElementById('pipe-sel-all').addEventListener('click', () => {
+    document.querySelectorAll('.pipe-row-chk').forEach(c => { c.checked = true; _pipeSelected.add(c.dataset.path); });
+  });
+
+  document.getElementById('pipe-queue-sel-idx').addEventListener('click', () => {
+    if (_pipeSelected.size) pipeQueueOp('index', [..._pipeSelected]);
+  });
+  document.getElementById('pipe-queue-sel-grph').addEventListener('click', () => {
+    if (_pipeSelected.size) pipeQueueOp('graph', [..._pipeSelected]);
+  });
+
+  document.getElementById('qi-clear').addEventListener('click', () => pipeQueueOp('clear_index', []));
+  document.getElementById('qg-clear').addEventListener('click', () => pipeQueueOp('clear_graph', []));
+  document.getElementById('qi-export').addEventListener('click', () => pipeExportQueue('index'));
+  document.getElementById('qg-export').addEventListener('click', () => pipeExportQueue('graph'));
+
+  // Sortable columns
+  document.querySelectorAll('.pipe-table th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (_pipeSort.col === col) { _pipeSort.dir *= -1; }
+      else { _pipeSort = { col, dir: 1 }; }
+      document.querySelectorAll('.pipe-table th').forEach(h => h.classList.remove('sort-asc','sort-desc'));
+      th.classList.add(_pipeSort.dir === 1 ? 'sort-asc' : 'sort-desc');
+      renderPipeTable();
+    });
+  });
+}
+
+// ── View switching ────────────────────────────────────────────────────────────
+const _viewQuery         = document.getElementById('view-query');
+const _viewPipeline      = document.getElementById('view-pipeline');
+const _viewConstellation = document.getElementById('view-constellation');
+const _viewScriptorium   = document.getElementById('view-scriptorium');
+const _frameLoaded       = { constellation: false, scriptorium: false };
+let   _pipelineInited    = false;
+
+function switchView(view) {
+  _viewQuery.style.display    = view === 'query'    ? '' : 'none';
+  _viewPipeline.style.display = view === 'pipeline' ? '' : 'none';
+  _viewConstellation.classList.toggle('active', view === 'constellation');
+  _viewScriptorium.classList.toggle('active',   view === 'scriptorium');
+  document.querySelectorAll('.nav-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.view === view));
+  if (view === 'pipeline' && !_pipelineInited) {
+    _pipelineInited = true;
+    initPipeline();
+    fetchPipelineStatus();
+  }
+  if ((view === 'constellation' || view === 'scriptorium') && !_frameLoaded[view]) {
+    document.getElementById('view-' + view).src = '/' + view + '/';
+    _frameLoaded[view] = true;
+  }
+}
+
+document.querySelectorAll('.nav-tab').forEach(btn =>
+  btn.addEventListener('click', () => switchView(btn.dataset.view)));
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
