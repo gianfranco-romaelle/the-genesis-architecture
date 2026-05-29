@@ -817,7 +817,11 @@ def format_passage(cand: dict, index: int) -> str:
         citation_parts.append(f"p. {page}")
     citation = ", ".join(citation_parts)
 
-    return f"[Source {index + 1}: {citation}]\n{p.get('text', '')}"
+    text = p.get("text", "")
+    context = p.get("context", "")
+    if context:
+        return f"[Source {index + 1}: {citation}]\n<context>{context}</context>\n{text}"
+    return f"[Source {index + 1}: {citation}]\n{text}"
 
 
 def generate_answer(question: str, candidates: list[dict], llm: str = "claude") -> str:
