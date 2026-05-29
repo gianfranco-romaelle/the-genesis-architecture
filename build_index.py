@@ -190,6 +190,9 @@ CHILD_CHUNK_TOKENS = 256
 CHUNK_OVERLAP_TOKENS = 32
 MIN_CHUNK_CHARS = 80       # discard chunks shorter than this
 SCANNED_CHAR_DENSITY = 0.3  # chars-per-byte below this → treat as scanned
+DOCLING_TIMEOUT_S    = 300  # 5-minute cap on Docling OCR per file; avoids infinite hangs on large scanned PDFs
+
+_DOCLING_ENABLED = True     # set to False via --no-docling to skip Docling fallback entirely
 
 SUPPORTED_EXTENSIONS = {".pdf", ".djvu"}
 
@@ -316,30 +319,39 @@ def parse_pdf_docling(path: Path) -> list[dict]:
     """Layout-aware parsing for scanned / complex PDFs via Docling."""
     if not DOCLING_OK:
         return []
-    try:
+    import concurrent.futures
+
+    def _run() -> list[dict]:
         conv = DocumentConverter()
         result = conv.convert(str(path))
         md = result.document.export_to_markdown()
-        # Split by page markers if present, otherwise treat as single page
         sections = re.split(r"\n#{1,3} Page \d+", md)
         return [
             {"page": i + 1, "text": s.strip()}
             for i, s in enumerate(sections) if s.strip()
         ]
-    except Exception as exc:
-        console.print(f"  [yellow]Docling error on {path.name}: {exc}[/yellow]")
-        return []
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as exe:
+        future = exe.submit(_run)
+        try:
+            return future.result(timeout=DOCLING_TIMEOUT_S)
+        except concurrent.futures.TimeoutError:
+            console.print(f"  [yellow]Docling timeout ({DOCLING_TIMEOUT_S}s) on {path.name} — skipping OCR[/yellow]")
+            return []
+        except Exception as exc:
+            console.print(f"  [yellow]Docling error on {path.name}: {exc}[/yellow]")
+            return []
 
 def parse_pdf(path: Path) -> list[dict]:
     """
     Parse strategy:
       1. PyMuPDF fast extraction
-      2. If density too low (scanned) → Docling for OCR
+      2. If density too low (scanned) and Docling enabled → OCR (5-min timeout)
       3. If both fail → return empty (file logged as failed)
     """
     pages = parse_pdf_pymupdf(path)
     full_text = " ".join(p["text"] for p in pages)
-    if _is_scanned(full_text, path.stat().st_size) and DOCLING_OK:
+    if _DOCLING_ENABLED and _is_scanned(full_text, path.stat().st_size) and DOCLING_OK:
         docling_pages = parse_pdf_docling(path)
         if docling_pages:
             return docling_pages
@@ -349,7 +361,7 @@ def parse_pdf_from_bytes(raw: bytes, path: Path) -> list[dict]:
     """Parse PDF from already-loaded bytes (avoids re-reading from network)."""
     pages = parse_pdf_pymupdf(path, raw=raw)
     full_text = " ".join(p["text"] for p in pages)
-    if _is_scanned(full_text, len(raw)) and DOCLING_OK:
+    if _DOCLING_ENABLED and _is_scanned(full_text, len(raw)) and DOCLING_OK:
         docling_pages = parse_pdf_docling(path)
         if docling_pages:
             return docling_pages
@@ -1011,10 +1023,16 @@ def main() -> None:
     ap.add_argument("--recreate-collection", action="store_true", help="Drop and recreate the Qdrant collection")
     ap.add_argument("--max-file-mb", type=float, default=None,
                     help="Skip files larger than this many megabytes (useful to skip huge outliers during testing)")
+    ap.add_argument("--no-docling", action="store_true",
+                    help="Disable Docling OCR fallback; use PyMuPDF only (faster, skips scanned PDFs)")
     ap.add_argument("--embed-via", choices=["local", "jina-cloud"], default="local",
                     help="Embedding backend: 'local' uses Jina v3 ONNX on CPU/GPU; "
                          "'jina-cloud' uses Jina AI API (requires JINA_API_KEY in .env)")
     args = ap.parse_args()
+    global _DOCLING_ENABLED
+    if args.no_docling:
+        _DOCLING_ENABLED = False
+        console.print("[yellow]Docling OCR disabled (--no-docling)[/yellow]")
 
     # ── Dependency check ───────────────────────────────────────────────────────
     warnings = check_dependencies()
