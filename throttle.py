@@ -25,7 +25,7 @@ from datetime import datetime
 _HERE           = Path(__file__).parent
 _CONFIG_PATH    = _HERE / "throttle_config.json"
 _PIPELINE_STATE = _HERE / "pipeline_state.json"
-_INDEXER_OUT    = _HERE / "indexer_out.txt"
+_LOGS_DIR       = _HERE / "logs"
 
 _DEFAULT_CONFIG: dict = {
     "indexers": ["build_index.py", "index_timeline.py", "graph_builder.py"],
@@ -375,18 +375,24 @@ def read_progress() -> tuple:
         pass
 
     try:
-        txt = _INDEXER_OUT.read_text(encoding="utf-8", errors="replace")
-        m   = re.search(r"Files to process:\s*([\d,]+)", txt)
-        m2  = re.search(r"already indexed:\s*([\d,]+)", txt)
-        if m:
-            total_count = int(m.group(1).replace(",", ""))
-            if m2:
-                total_count += int(m2.group(1).replace(",", ""))
+        logs = sorted(
+            _LOGS_DIR.glob("*.log"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        if logs:
+            txt = logs[0].read_text(encoding="utf-8", errors="replace")
+            m   = re.search(r"Files to process:\s*([\d,]+)", txt)
+            m2  = re.search(r"already indexed:\s*([\d,]+)", txt)
+            if m:
+                total_count = int(m.group(1).replace(",", ""))
+                if m2:
+                    total_count += int(m2.group(1).replace(",", ""))
     except (OSError, MemoryError):
         pass
 
     if total_count == 0:
-        total_count = max(indexed_count, 3904)
+        total_count = indexed_count
 
     files_per_hr = 0.0
     if len(timestamps) >= 2:

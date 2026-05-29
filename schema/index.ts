@@ -78,6 +78,17 @@ export interface PipelineStateRecord {
  * sacred-timeline/public/generated/historical-entity-graph.snapshot.json
  * and polled by unified-runtime.ts every 20 seconds.
  */
+export type {
+  RegionType,
+  LayerType,
+  BBox,
+  HistoDocRegion,
+  HistoDocLayer,
+  HistoDocDocument,
+  HistoDocStateEntry,
+  HistoDocState,
+} from './HistoDoc.js';
+
 export interface GraphSnapshot {
   schema_version: string;              // semver, e.g., "1.0.0"
   snapshot_id: string;                 // UUID of this snapshot
