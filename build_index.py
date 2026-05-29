@@ -191,6 +191,7 @@ CHUNK_OVERLAP_TOKENS = 32
 MIN_CHUNK_CHARS = 80       # discard chunks shorter than this
 SCANNED_CHAR_DENSITY = 0.3  # chars-per-byte below this → treat as scanned
 DOCLING_TIMEOUT_S    = 300  # 5-minute cap on Docling OCR per file; avoids infinite hangs on large scanned PDFs
+FILE_READ_TIMEOUT_S  = 180  # 3-minute cap on reading a file from disk/network; avoids G: drive stalls
 
 _DOCLING_ENABLED = True     # set to False via --no-docling to skip Docling fallback entirely
 
@@ -823,8 +824,19 @@ def process_file(
     # ── Hash + parse, dispatched by format ────────────────────────────────────
     if ext == ".pdf":
         # Read once for both hash and parse (avoids double network I/O)
+        # Timeout guards against G: drive stalls on uncached files
+        import concurrent.futures as _cf
         try:
-            raw = read_file_bytes(path)
+            with _cf.ThreadPoolExecutor(max_workers=1) as _exe:
+                _fut = _exe.submit(read_file_bytes, path)
+                raw = _fut.result(timeout=FILE_READ_TIMEOUT_S)
+        except _cf.TimeoutError:
+            console.print(f"  [yellow]Read timeout ({FILE_READ_TIMEOUT_S}s) on {path.name} — skipping[/yellow]")
+            return {
+                "path": rel, "hash": "", "status": "failed",
+                "chunks_indexed": 0, "error": f"read timeout after {FILE_READ_TIMEOUT_S}s",
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
         except OSError as exc:
             return {
                 "path": rel, "hash": "", "status": "failed",
