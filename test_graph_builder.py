@@ -361,4 +361,5 @@ else:
 # ── summary ───────────────────────────────────────────────────────────────────
 print()
 print(f"Results: {PASS} passed, {FAIL} failed")
-sys.exit(FAIL)
+if __name__ == "__main__":
+    sys.exit(FAIL)

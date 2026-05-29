@@ -71,9 +71,10 @@ MAX_GRAPH_RETRIES = 5      # give up on a file after this many consecutive API f
 # Fallback chain: tried in order when the primary model exhausts all retries with 429
 FALLBACK_MODELS = [
     "nvidia/nemotron-nano-12b-v2-vl:free",
-    "meta-llama/llama-3.2-3b-instruct:free",
     "openai/gpt-oss-20b:free",
     "deepseek/deepseek-v4-flash:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "meta-llama/llama-3.2-3b-instruct:free",
 ]
 
 # ── env loading ───────────────────────────────────────────────────────────────
