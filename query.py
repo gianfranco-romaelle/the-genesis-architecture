@@ -279,6 +279,7 @@ def get_openrouter() -> Optional[Any]:
             _openrouter_client = _openai.OpenAI(
                 api_key=api_key,
                 base_url=OPENROUTER_BASE_URL,
+                max_retries=0,  # never sleep on Retry-After; caller handles failures
             )
         else:
             Console(stderr=True).print("[yellow]OPENROUTER_API_KEY not set - OpenRouter ensemble disabled[/yellow]")
@@ -315,6 +316,11 @@ def _openrouter_call(
 _qdrant_reachable_cache: tuple = (False, 0.0)  # (result, timestamp)
 _QDRANT_REACHABLE_TTL = 5.0  # seconds between socket probes
 
+# Singleton local client — opened once, reused across requests so recovery only
+# happens once per server lifetime instead of once per query.
+_qdrant_local_client: Optional[Any] = None
+_qdrant_local_client_lock = __import__("threading").Lock()
+
 
 def _qdrant_server_reachable() -> bool:
     """Fast socket-level check (0.5 s) before attempting full HTTP client. Cached for 5 s."""
@@ -347,7 +353,20 @@ def _qdrant_local_locked() -> bool:
         return True
 
 
+def _close_local_qdrant_client() -> None:
+    """Release the cached local client so the indexer can acquire the lock."""
+    global _qdrant_local_client
+    with _qdrant_local_client_lock:
+        if _qdrant_local_client is not None:
+            try:
+                _qdrant_local_client.close()
+            except Exception:
+                pass
+            _qdrant_local_client = None
+
+
 def get_qdrant() -> Optional[Any]:
+    global _qdrant_local_client
     if not QDRANT_OK:
         return None
     if _qdrant_server_reachable():
@@ -360,27 +379,39 @@ def get_qdrant() -> Optional[Any]:
     if not Path(QDRANT_LOCAL_PATH).exists():
         console.print("[red]No Qdrant index found. Run build_index.py first.[/red]")
         return None
-    if _qdrant_local_locked():
-        console.print(
-            "[yellow]Qdrant index is locked by the indexer. "
-            "Queries are unavailable while build_index.py runs. "
-            "Start Docker Qdrant for concurrent access.[/yellow]"
-        )
-        return None
-    try:
-        return QdrantClient(path=QDRANT_LOCAL_PATH)
-    except RuntimeError as exc:
-        if "already accessed" in str(exc):
+
+    with _qdrant_local_client_lock:
+        # Return cached client if still alive
+        if _qdrant_local_client is not None:
+            try:
+                _qdrant_local_client.get_collections()
+                return _qdrant_local_client
+            except Exception:
+                _qdrant_local_client = None  # invalidate stale client
+
+        # Only open if no other process holds the lock
+        if _qdrant_local_locked():
             console.print(
                 "[yellow]Qdrant index is locked by the indexer. "
                 "Queries are unavailable while build_index.py runs. "
                 "Start Docker Qdrant for concurrent access.[/yellow]"
             )
-        else:
+            return None
+        try:
+            _qdrant_local_client = QdrantClient(path=QDRANT_LOCAL_PATH)
+            return _qdrant_local_client
+        except RuntimeError as exc:
+            if "already accessed" in str(exc):
+                console.print(
+                    "[yellow]Qdrant index is locked by the indexer. "
+                    "Queries are unavailable while build_index.py runs. "
+                    "Start Docker Qdrant for concurrent access.[/yellow]"
+                )
+            else:
+                console.print(f"[red]Qdrant local open failed: {exc}[/red]")
+        except Exception as exc:
             console.print(f"[red]Qdrant local open failed: {exc}[/red]")
-    except Exception as exc:
-        console.print(f"[red]Qdrant local open failed: {exc}[/red]")
-    return None
+        return None
 
 
 def collection_exists(client: Any) -> bool:
